@@ -1,0 +1,88 @@
+# dmp namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dmp
+---
+# project-service-ingress
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: project-service-ingress
+  namespace: kube-system
+  annotations:
+    #nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+    - host: gov-cio.test
+      http:
+        paths:
+          - path: /project
+            backend:
+              serviceName: project-service-app
+              servicePort: 9091
+--- 
+# project-service-app (external name)
+apiVersion: v1
+kind: Service
+metadata:
+  name: project-service-app
+  namespace: kube-system
+spec:
+  externalName: project-service-app.dmp.svc.cluster.local
+  type: ExternalName
+  
+--- 
+# project-service-app
+apiVersion: v1
+kind: Service
+metadata:
+  name: project-service-app
+  namespace: dmp
+spec:
+  ports:
+    - name: http
+      port: 9091
+      targetPort: 8080
+      protocol: TCP
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 443
+  selector:
+    app: project-service-app
+  type: NodePort 
+
+--- 
+# user service deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-service-app
+  namespace: dmp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: project-service-app
+  template:
+    metadata:
+      labels:
+        app: project-service-app
+    spec:
+      containers:
+        - name: project-service-app
+          image: williamdrew/project-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 9779
+              name: prometheus
+              protocol: TCP
+            - containerPort: 8778
+              name: jolokia
+              protocol: TCP
+ 
+

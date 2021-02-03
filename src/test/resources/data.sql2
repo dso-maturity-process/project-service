@@ -1,0 +1,3 @@
+insert into project(id, name, description) values(10001, 'VA-PARS', 'Provides reporting of project status.');
+
+insert into user(id, firstname, lastName, userName, password) values(10002, 'william', 'drew', 'wdrew@governmentcio.com', 'password');
